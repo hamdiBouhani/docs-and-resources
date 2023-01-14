@@ -1,0 +1,35 @@
+SQL Examples;
+
+select max_Bids.member_id , m.name_en as bidder_name, m.phone as bidder_phone_no, ah.created_date as time_of_bid, max_Bids.highest_bid
+from (
+	SELECT  ah.member_id, MAX(ah.bid_amount) as highest_bid 
+	FROM auction_history ah 
+	left join members m on m.id = ah.member_id 
+	WHERE (listing_auction_id = 200) 
+	GROUP BY ah.member_id
+)as max_Bids
+left join members m on m.id = max_Bids.member_id 
+left join auction_history ah on ah.listing_auction_id=200 and ah.bid_amount=max_Bids.highest_bid
+
+
+
+SELECT  ah.member_id, MAX(ah.bid_amount) as highest_bid 
+FROM auction_history ah 
+left join members m on m.id = ah.member_id 
+WHERE (listing_auction_id = 200) 
+GROUP BY ah.member_id
+
+
+select * from auction_history ah2 where ah2.listing_auction_id = 200
+
+
+                select max_Bids.member_id , m.name_en as bidder_name, m.phone as bidder_phone_no, ah.created_date as time_of_bid, max_Bids.highest_bid
+                from (
+                        SELECT  ah.member_id, MAX(ah.bid_amount) as highest_bid
+                        FROM auction_history ah
+                        left join members m on m.id = ah.member_id
+                        WHERE (listing_auction_id = 519)
+                        GROUP BY ah.member_id
+                )as max_Bids
+                left join members m on m.id = max_Bids.member_id
+                left join auction_history ah on ah.listing_auction_id = 519 and ah.bid_amount=max_Bids.highest_bid
