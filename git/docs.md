@@ -21,3 +21,7 @@
 ```
 git commit -m "[skip-ci]”
 ```
+
+# remove git
+
+rm -fr .git
