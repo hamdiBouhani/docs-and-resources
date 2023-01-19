@@ -74,16 +74,14 @@ resource "local_file" "pet" {
 }
 
 
->> $ 
 
 
- 1456  terraform workspace create development
- 1457* terraform wo
- 1458  terraform workspace new production
- 1459  terraform plan
- 1460  terraform workspace select development
- 1461  terraform plan
- 1462  terraform plan -var-file ./development.tfvars 
- 1463  history
- terraform workspace show
+
+
+ >> $ terraform workspace new production
+ >> $ terraform plan
+ >> $ terraform workspace select development
+ >> $ terraform plan
+ >> $ terraform plan -var-file ./development.tfvars 
+ >> $ terraform workspace show
 
