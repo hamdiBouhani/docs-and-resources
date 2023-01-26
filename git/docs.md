@@ -25,3 +25,16 @@ git commit -m "[skip-ci]”
 # remove git
 
 rm -fr .git
+
+
+# fix conflict
+```shell
+
+   git pull
+   git checkout feat/add-gar-clear-for-multiple-project
+   git merge develop
+   git add .
+   git status
+   git commit -m "merge dev"
+   git push
+```
