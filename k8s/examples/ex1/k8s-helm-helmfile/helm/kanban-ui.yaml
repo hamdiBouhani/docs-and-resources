@@ -1,6 +1,0 @@
-app:
-  name: kanban-ui
-  group: frontend
-  container:
-    image: wkrzywiec/kanban-ui:k8s
-    port: 80

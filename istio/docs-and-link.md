@@ -1,4 +1,6 @@
 
+[how update the helm installation of istio to enable 'Kubernetes Ingress with Cert-Manager' or 'enable SDS at ingress gateway'](https://stackoverflow.com/questions/61606102/how-update-the-helm-installation-of-istio-to-enable-kubernetes-ingress-with-cer?rq=1)
+
 [Setting up on ISTIO on EKS cluster using Terraform or Helm:](https://stackoverflow.com/questions/66851553/setting-up-on-istio-on-eks-cluster-using-terraform-or-helm)
 
 
