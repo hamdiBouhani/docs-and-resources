@@ -1,6 +1,0 @@
-namespace: helloworld
-
-resources:
-  - namespace.yaml
-  - helloworld-gateway.yaml
-  - helloworld.yaml
