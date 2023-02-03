@@ -38,3 +38,11 @@ rm -fr .git
    git commit -m "merge dev"
    git push
 ```
+
+
+```
+git checkout master			# master is checked out
+git pull					# update local
+git merge new-feature		# merge branch new-feature into master
+git push
+```
