@@ -1,0 +1,79 @@
+<!DOCTYPE html> <html lang=en><!--
+ Page saved with SingleFile 
+ url: https://www.worldofbs.com/minimize-state/ 
+ saved date: Tue Feb 07 2023 13:49:11 GMT+0100 (Central European Standard Time)
+--><meta charset=utf-8>
+<meta name=referrer content=no-referrer>
+<meta name=viewport content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>All Programming Philosophies Are About State | World of BS</title>
+<meta property=og:title content="All Programming Philosophies Are About State | World of BS">
+<meta name=twitter:title content="All Programming Philosophies Are About State | World of BS">
+<meta property=og:site_name content="World of BS">
+<meta property=og:url content=https://worldofbs.com>
+<style>:root{--sans-font:-apple-system,BlinkMacSystemFont,"Avenir Next",Avenir,"Nimbus Sans L",Roboto,"Noto Sans","Segoe UI",Arial,Helvetica,"Helvetica Neue",sans-serif;--mono-font:Consolas,Menlo,Monaco,"Andale Mono","Ubuntu Mono",monospace;--bg:#fff;--accent-bg:#f5f7ff;--text:#212121;--text-light:#585858;--border:#898EA4;--accent:#0d47a1;--code:#d81b60;--preformatted:#444;--marked:#ffdd33;--disabled:#efefef}@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#212121;--accent-bg:#2b2b2b;--text:#dcdcdc;--text-light:#ababab;--accent:#ffb300;--code:#f06292;--preformatted:#ccc;--disabled:#111}}*,::after,::before{box-sizing:border-box}html{font-family:var(--sans-font);scroll-behavior:smooth}body{color:var(--text);background-color:var(--bg);font-size:1.15rem;line-height:1.5;display:grid;margin:0}body>*{grid-column:2}body>header{background-color:var(--accent-bg);border-bottom:1px solid var(--border);text-align:center;padding:0 .5rem 2rem .5rem;grid-column:1/-1}body>header h1{max-width:1200px;margin:1rem auto}body>header p{max-width:40rem;margin:1rem auto}main{padding-top:1.5rem}body>footer{margin-top:4rem;padding:2rem 1rem 1.5rem 1rem;color:var(--text-light);font-size:.9rem;text-align:center;border-top:1px solid var(--border)}h1{font-size:3rem}h1,p{overflow-wrap:break-word}h1{line-height:1.1}@media only screen and (max-width:720px){h1{font-size:2.5rem}}a,a:visited{color:var(--accent)}a:hover{text-decoration:none}article{padding:1rem;border-radius:5px;margin-bottom:1rem}section{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2rem 1rem;margin:3rem 0}section+section,section:first-child{border-top:0;padding-top:0}section:last-child{border-bottom:0;padding-bottom:0}.unstyled:hover{text-decoration:none}.zola-anchor{font-size:75%;visibility:hidden;margin-left:0.25em}h1:hover a,h2:hover a,h3:hover a,h4:hover a,h5:hover a,h6:hover a{visibility:visible}body{grid-template-columns:1fr min(50rem,90%) 1fr}a{text-decoration:none}a:hover{text-decoration:underline}.c-pagination__ctrl{display:flex;flex-direction:row;justify-content:space-between}article{border:none}h1{font-weight:300}:root{--sans-font:"Source Sans Pro","sans-serif",-apple-system,BlinkMacSystemFont,"Avenir Next",Avenir,"Nimbus Sans L",Roboto,"Noto Sans","Segoe UI",Arial,Helvetica,"Helvetica Neue",sans-serif}</style>
+<link rel=alternate type=application/atom+xml title="World of BS" href=https://worldofbs.com/atom.xml>
+<style>.sf-hidden{display:none!important}</style><link rel=canonical href=https://www.worldofbs.com/minimize-state/><meta http-equiv=content-security-policy content="default-src 'none'; font-src 'self' data:; img-src 'self' data:; style-src 'unsafe-inline'; media-src 'self' data:; script-src 'unsafe-inline' data:; object-src 'self' data:; frame-src 'self' data:;"><style>img[src="data:,"],source[src="data:,"]{display:none!important}</style></head>
+ <body data-new-gr-c-s-check-loaded=14.1095.0 data-gr-ext-installed>
+ 
+ <header class=l-header>
+ <h1 class="c-title p-title"><a href=https://worldofbs.com/ class="p-title__link unstyled">World of BS</a></h1>
+ <p><a href=https://worldofbs.com/rss.xml class=unstyled>rss</a></p>
+ </header>
+ <main id=main class=l-main>
+ 
+<article class=p-article>
+ <header>
+ <h1>All Programming Philosophies Are About State
+</h1>
+ <div>
+ <div class=c-time>
+ <time datetime=2023-02-04>
+ 2023-02-04
+ </time>
+ 
+ - (2 min read)
+ </div>
+ </div>
+ </header>
+ 
+ <section id=js-article class=p-article__body>
+ <p>I recently realized that all the various programming philosophies are concerned with state, and can be boiled down into a simple statement about how to work with state.</p>
+<p><strong>Object-Oriented</strong> - Modifying a lot of state at once is hard to get correct; encapsulate subsets of state into separate objects and allow limited manipulation of the encapsulated sub-state via methods.</p>
+<p><strong>Functional</strong> - Modifying state is hard to get correct; keep it at the boundaries and keep logic pure so that it is easier to verify the logic is correct.</p>
+<p><strong>Declarative</strong> - Modifying state is hard to get correct; use a language to describe how state should be manipulated and allow the machine to determine the steps required.</p>
+<p><strong>Imperative</strong> - Modifying state is hard to get correct; minimize the number of conceptual layers between how the computer operates and how the code is written.</p>
+<p><strong>Monolith</strong> - Modifying state distributed among many services is hard to get correct; keep it centralized.</p>
+<p><strong>Service-Oriented-Architecture</strong> - Modifying all of the state in one service is hard to get correct; distribute it among multiple services.</p>
+<p><strong>MicroServices</strong> - Modifying any state in a service is hard to get correct; have many services that are primarily stateless.</p>
+<h1 id=conclusion>Conclusion<a class=zola-anchor href=#conclusion aria-label="Anchor link for: conclusion">🔗</a></h1>
+<p>What this shows is that every programming philosophy is about how to manage state, and each philosophy comes with trade-offs. What this means is that there is no "one true way" to deal with state, and that each programming philosophy is useful and important in the correct domain. It also shows how important <em>minimizing</em> state is.</p>
+ </section>
+ <footer>
+ <nav class="c-pagination p-pagination">
+ <div class=c-pagination__ctrl>
+ <div class=c-pagination__newer>
+ 
+ </div>
+ <div class=c-pagination__older>
+ <a href=https://worldofbs.com/nixos-framework/>NixOS On the Framework Laptop</a>
+ </div>
+ </div>
+ </nav>
+ </footer>
+</article>
+ </main>
+ 
+ <footer class=l-footer>
+ <p class=p-copyright>
+ 
+ Copyright CGenschwap 2020
+ </p>
+ </footer>
+ 
+ 
+ 
+ 
+<div class=betternet-wrapper><template shadowroot=open><style class=sf-hidden>.betternet_content_clean *{}</style>
+ <style class=sf-hidden>@import url(data:,);</style>
+ <div id=betternet_content_root class=betternet_content_clean><div class=betternet_content></div></div>
+ </template></div><div><div style=display:none;position:fixed;top:30px;width:auto;max-width:100%;text-align:center;left:50%;transform:translateX(-50%);z-index:99999999></div></div><grammarly-desktop-integration data-grammarly-shadow-root=true><template shadowroot=open><style class=sf-hidden>div.grammarly-desktop-integration{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none}div.grammarly-desktop-integration:before{content:attr(data-content)}</style><div aria-label=grammarly-integration role=group tabindex=-1 class=grammarly-desktop-integration data-content='{"mode":"full","isActive":true,"isUserDisabled":false}'></div></template></grammarly-desktop-integration><script data-template-shadow-root>(()=>{document.currentScript.remove();processNode(document);function processNode(node){node.querySelectorAll("template[shadowroot]").forEach(element=>{let shadowRoot = element.parentElement.shadowRoot;if (!shadowRoot) {try {shadowRoot=element.parentElement.attachShadow({mode:element.getAttribute("shadowroot")});shadowRoot.innerHTML=element.innerHTML;element.remove()} catch (error) {} if (shadowRoot) {processNode(shadowRoot)}}})}})()</script>
