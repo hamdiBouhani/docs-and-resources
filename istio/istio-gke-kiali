@@ -1,0 +1,106 @@
+[0] Pre-requisites
+
+    Install google-cloud-sdk in your laptop
+    Documentation: https://cloud.google.com/sdk
+    
+    Install helm in your laptop.
+	Documentation: https://helm.sh/docs/using_helm/#installing-helm
+
+	Get latest Istio.
+	curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.7 sh -
+    
+    # Define a ISTIO_HOME pointing to the istio folder
+
+[1] Create a Google Kubernetes Engine cluster
+    i.e. lucas-cluster
+
+ gcloud container clusters create lucas-cluster \
+  --cluster-version latest \
+  --num-nodes 4
+
+[2] Retrieve your credentials
+
+ gcloud container clusters get-credentials lucas-cluster
+
+[3] Grant cluster administrator (admin) permissions to the current user.
+    To create the necessary RBAC rules for Istio, the current user requires admin permissions.
+    
+ kubectl create clusterrolebinding cluster-admin-binding \
+    --clusterrole=cluster-admin \
+    --user=$(gcloud config get-value core/account)
+
+[4] Install Istio definitions via helm.
+
+ cd $ISTIO_HOME
+ kubectl create namespace istio-system
+ helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
+ 
+ # Verify 53 CRDs are created.  
+ kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l
+ 
+[5] Install Istio demo profile
+
+ helm template install/kubernetes/helm/istio --name istio --namespace istio-system \
+    --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f - 
+ 
+ # Verify all Istio pods are up and running
+ kubectl get pods -n istio-system -w
+ 
+[6] Expose the Telemetry add-ons.
+    For the workshop we will use a insecure HTTP port.
+    
+ curl -L https://git.io/fj2rL | kubectl apply -f -
+ 
+ # Verify Telemetry add-ons
+ export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+ 
+ # Linux helper
+ # xdg-open is a command to open a browser from the command line.
+ # Mac users can use "open" command
+ # Windows users can use "cmd" command
+ # Otherwise, the check is just to confirm you can access addons from your browser
+
+ export KIALI_URL="http://${INGRESS_HOST}:15029/kiali"
+ export PROMETHEUS_URL="http://${INGRESS_HOST}:15030/" 
+ export GRAFANA_URL="http://${INGRESS_HOST}:15031/"
+ export JAEGER_URL="http://${INGRESS_HOST}:15032/jaeger"
+ 
+ # Kiali, Prometheus, Grafana, Jaeger
+ xdg-open ${KIALI_URL} && \
+ xdg-open ${PROMETHEUS_URL} && \
+ xdg-open ${GRAFANA_URL} && \
+ xdg-open ${JAEGER_URL}
+ 
+[7] Install Bookinfo on default namespace
+    
+ kubectl label namespace default istio-injection=enabled
+ kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+ 
+ # Verify all Bookinfo pods are running
+ kubectl get pods -w
+
+[8] Expose Bookinfo through Ingress
+
+ kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+ 
+ # Verify user can access Bookinfo app
+ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].port}') 
+ xdg-open http://${INGRESS_HOST}:${INGRESS_PORT}/productpage
+ 
+[9] Update Kiali
+
+ curl -L https://git.io/fjrX5 | envsubst > $HOME/update-kiali-cr.yaml
+ bash <(curl -L https://git.io/getLatestKialiOperator) --kiali-cr $HOME/update-kiali-cr.yaml
+  
+-------------------------------------------
+
+Troubleshooting:
+
+[a] kiali-operator namespace is in "Terminating" state but it doesn't finish.
+
+ kubectl patch kiali kiali -n kiali-operator -p '{"metadata":{"finalizers": []}}' --type=merge
+ 
+[b] Delete a Google Kubernetes Engine cluster.
+    i.e. lucas-cluster
+    
+ gcloud container clusters delete lucas-cluster
