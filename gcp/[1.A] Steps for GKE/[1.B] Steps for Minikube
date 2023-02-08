@@ -1,0 +1,29 @@
+[1]   Open a X session to a linux box where you have a minikube installed
+
+ssh -X neorecopolis
+
+lponce@neorecopolis:~$ minikube version
+minikube version: v1.17.1
+commit: 043bdca07e54ab6e4fc0457e3064048f34133d7e
+
+$ kubectl version
+Client Version: version.Info{Major:"1", Minor:"20", GitVersion:"v1.20.2", GitCommit:"faecb196815e248d3ecfb03c680a4507229c2a56", GitTreeState:"clean", BuildDate:"2021-01-13T13:28:09Z", GoVersion:"go1.15.5", Compiler:"gc", Platform:"linux/amd64"}
+
+[2]   Create a Minikube cluster, adjust your memory/cpu
+
+# Platform Setup
+minikube config set vm-driver kvm2
+minikube start --memory=16384 --cpus=4 --kubernetes-version=v1.20.2
+
+[3]   Start minikube tunnel
+
+minikube tunnel
+
+[4]   Open a new X session to your linux box, test the cluster accesss
+
+ssh -X neorecopolis
+
+kubectl get nodes
+
+NAME       STATUS   ROLES                  AGE     VERSION
+minikube   Ready    control-plane,master   4m23s   v1.20.2

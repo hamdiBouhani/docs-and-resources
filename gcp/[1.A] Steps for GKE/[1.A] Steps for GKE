@@ -1,0 +1,41 @@
+[1]   Open https://console.cloud.google.com/ with your gmail account
+
+[2]   Create a Project / Choose a Project you have access to.
+
+[3]   Activate "Cloud Shell"
+
+[4]   Prepare a GKE cluster using 
+      https://istio.io/latest/docs/setup/platform-setup/gke/
+      
+export PROJECT_ID=`gcloud config get-value project` && \
+  export M_TYPE=n1-standard-2 && \
+  export ZONE=us-west2-a && \
+  export CLUSTER_NAME=${PROJECT_ID}-${RANDOM} && \
+  gcloud services enable container.googleapis.com && \
+  gcloud container clusters create $CLUSTER_NAME \
+  --cluster-version latest \
+  --machine-type=$M_TYPE \
+  --num-nodes 4 \
+  --zone $ZONE \
+  --project $PROJECT_ID
+  
+
+# Optional, if you are using gcloud from a different shell. Using "Cloud Shell" should have the credentials configured.
+gcloud container clusters get-credentials $CLUSTER_NAME \
+    --zone $ZONE \
+    --project $PROJECT_ID  
+
+[5]   Take Cluster details
+
+NAME                        LOCATION    MASTER_VERSION    MASTER_IP      MACHINE_TYPE   NODE_VERSION      NUM_NODES  STATUS
+kiali-recipe-mark-01-29341  us-west2-a  1.18.15-gke.1500  35.235.77.110  n1-standard-2  1.18.15-gke.1500  4          RUNNING
+
+[6]   Basic cluster test
+
+kubectl get nodes
+
+NAME                                                  STATUS   ROLES    AGE    VERSION
+gke-kiali-recipe-mark-01-default-pool-247fe88a-3167   Ready    <none>   5m4s   v1.18.15-gke.1500
+gke-kiali-recipe-mark-01-default-pool-247fe88a-j8tt   Ready    <none>   5m4s   v1.18.15-gke.1500
+gke-kiali-recipe-mark-01-default-pool-247fe88a-w5qz   Ready    <none>   5m4s   v1.18.15-gke.1500
+gke-kiali-recipe-mark-01-default-pool-247fe88a-xf7c   Ready    <none>   5m5s   v1.18.15-gke.1500

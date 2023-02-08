@@ -1,0 +1,21 @@
+[1]   Install Gateway for Demo App
+
+kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+
+[2]   Get the external IP https://istio.io/latest/docs/setup/getting-started/#determining-the-ingress-ip-and-ports
+
+kubectl get svc istio-ingressgateway -n istio-system
+
+[3]   Update a local DNS name for bookinfo with the istio-ingressgateway public IP
+
+Note, the /etc/hosts should be used where you will open your browser
+
+Linux
+
+sudo vi /etc/hosts
+
+35.236.100.43 bookinfo.istio-cluster.org
+
+[4]   Verify your local DNS   http://bookinfo.istio-cluster.org/productpage
+
+[5]   Note, you can use a public DNS and register the ingress IP with your domain, just take the time to refresh the DNS caches

@@ -1,0 +1,18 @@
+[1]   Check Overview page, istio-system and default namespaces have a warning on Istio Config
+
+[2]   Navigate to bookinfo-gateway Istio Config on default namespace
+
+[3]   Update the wildcard in the gateway to resolve the ambiguity
+
+* -> bookinfo.istio-cluster.org
+
+[4]   VirtualService is linked with a Gateway but it's a good practice to resolve the ambiguity on this case too
+
+* -> bookinfo.istio-cluster.org
+
+[5]   Save Gateway and VirtualHost on default and check the overview page
+
+
+Congratulations, you have resolved a warning using Kiali
+
+This is just the first step, you are ready to start the Kiali Tutorial
