@@ -1,0 +1,46 @@
+/*Portrait resize */
+@media only screen and (orientation: portrait){
+    #ad{
+        font-size: 3.33vw;
+    }
+
+    .pro-f3 {
+    	bottom: 19%;
+	}
+
+	.pro-f1 {
+    	bottom: 25%;
+	}
+
+	.f4-bg {
+    	object-fit: fill;
+	}
+
+
+}
+
+@media only screen and (min-width: 320px){
+
+.con-f2 {
+    left: 8%;
+}
+
+.pro-f3 {
+	bottom: 19%;
+}
+
+.con-f1 {
+    left: 28px;
+    top: 4%;
+}
+
+.pro-f1 {
+    right: 25%;
+}
+
+.con-f3 {
+    top: 41%;
+}
+
+}
+

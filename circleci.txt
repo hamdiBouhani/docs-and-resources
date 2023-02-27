@@ -1,0 +1,670 @@
+config-default: &config-default
+  IMAGE: europe-docker.pkg.dev/dealroom-artifacts/containers/terraform
+  IMAGE_TAG: "0.1.5"
+
+k8s-parameters: &k8s-parameters
+  gke_auth: true
+
+when-apply: &when-apply
+  condition:
+    equal: [true, << parameters.apply >>]
+
+when-plan: &when-plan
+  condition:
+    equal: [true, << parameters.plan >>]
+
+when-helm-diff-true: &when-helm-diff-true
+  condition:
+    equal: [true, << parameters.helm_diff >>]
+
+when-gke-auth-enabled: &when-gke-auth-enabled
+  condition:
+    equal: [true, << parameters.gke_auth >>]
+
+when-whitelist: &when-whitelist
+  condition:
+    and:
+      - equal: [true, << parameters.gke_auth >>]
+      - equal: [main, << pipeline.git.branch >>]
+
+when-develop: &when-develop
+  condition:
+    equal: [develop, << pipeline.git.branch >>]
+
+when-main: &when-main
+  condition:
+    equal: [main, << pipeline.git.branch >>]
+
+filter-branches: &filter-branches
+  filters:
+    branches:
+      only:
+        - develop
+        - main
+
+filter-develop: &filter-develop
+  filters:
+    branches:
+      only:
+        - develop
+
+filter-main: &filter-main
+  filters:
+    branches:
+      only:
+        - main
+
+apply-requires: &apply-requires
+  requires:
+    - approved
+
+plan-development-name-filter: &plan-development-name-filter
+  name: plan-development
+  <<: *filter-develop
+
+plan-production-name-filter: &plan-production-name-filter
+  name: plan-production
+  <<: *filter-main
+
+apply-develop-name-requires-filter: &apply-develop-name-requires-filter
+  name: apply-development
+  <<: *apply-requires
+  <<: *filter-develop
+
+apply-production-name-requires-filter: &apply-production-name-requires-filter
+  name: apply-production
+  <<: *apply-requires
+  <<: *filter-main
+
+gke-cluster-context-develop: &gke-cluster-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - gke-cluster
+    - gar
+    - gke-core-development
+
+core-database-context-develop: &core-database-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - core-database
+    - gar
+    - gke-core-development
+
+secrets-management-context-develop: &secrets-management-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - secrets-management
+    - gar
+    - gke-core-development
+
+k8s-manifest-context-develop: &k8s-manifest-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - k8s-manifest
+    - gar
+    - gke-core-development
+
+cloud-storage-context-develop: &cloud-storage-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - cloud-storage
+    - gar
+    - gke-core-development
+
+cloudamqp-context-develop: &cloudamqp-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - cloudamqp
+    - gar
+    - gke-core-development
+
+redis-context-develop: &redis-context-develop
+  context:
+    - terraform-default-develop
+    - slack
+    - gar
+    - redis-core
+
+gke-cluster-context-main: &gke-cluster-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - gke-cluster
+    - gar
+    - gke-core-production
+
+core-database-context-main: &core-database-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - core-database
+    - gar
+    - gke-core-production
+
+secrets-management-context-main: &secrets-management-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - secrets-management
+    - gar
+    - gke-core-production
+
+k8s-manifest-context-main: &k8s-manifest-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - k8s-manifest
+    - gar
+    - gke-core-production
+
+cloud-storage-context-main: &cloud-storage-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - cloud-storage
+    - gar
+    - gke-core-production
+
+cloudamqp-context-main: &cloudamqp-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - cloudamqp
+    - gar
+    - gke-core-production
+
+redis-context-main: &redis-context-main
+  context:
+    - terraform-default-production
+    - slack
+    - gar
+    - redis-core
+
+pause: &pause
+  pause_workflow:
+    requires:
+      - plan-production
+      # - plan-development
+    type: approval
+    <<: *filter-branches
+
+step-name: &step-name
+  name: Setup Environment Variable
+
+slack-container: &slack-container
+  docker:
+    - image: "cimg/base:stable"
+
+check-change-container: &check-change-container
+  docker:
+    - image: "cimg/base:stable"
+
+approved-requires-filter: &approved-requires-filter
+  requires:
+    - pause_workflow
+  <<: *filter-branches
+
+terraform-commands: &terraform-commands
+  command: |
+    cd $PATH_PROJECT
+    terraform init
+    terraform workspace select $WORKSPACE
+    terraform $COMMAND $PARALLELISM $OPTION
+
+save-plan: &save-plan
+  save_cache:
+    key: v1-myapp-cache-{{ .Branch }}-{{ .Environment.PROJECT }}-{{ checksum "terraform/terraform-plan" }}
+    paths:
+      - terraform/terraform-plan
+
+restore-plan: &restore-plan
+  restore_cache:
+    keys:
+      - v1-myapp-cache-{{ .Branch }}-{{ .Environment.PROJECT }}-
+
+configure-gke-auth: &configure-gke-auth
+  name: Get K8S credentials
+  command: |
+    echo $GKE_SERVICE_ACCOUNT | base64 -d > /tmp/serviceaccount.json
+    gcloud auth activate-service-account --key-file=/tmp/serviceaccount.json --project $PROJECT_ID
+    gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
+
+gar-image-auth: &gar-image-auth
+  auth:
+    username: _json_key
+    password: $GCLOUD_SERVICE_KEY
+
+docker-cloudsdk-extras: &docker-cloudsdk-extras
+  docker:
+    - image: $IMAGE:$IMAGE_TAG
+      <<: *gar-image-auth
+
+defaults: &defaults
+  parameters:
+    datadog_step:
+      type: string
+      default: "0-103"
+    cert_manager_step:
+      type: string
+      default: "0-104"
+    helm_diff:
+      type: boolean
+      default: false
+    step_number:
+      type: string
+      default: "0-103"
+    gke_auth:
+      type: boolean
+      default: false
+    plan:
+      type: boolean
+      default: false
+    apply:
+      type: boolean
+      default: false
+  steps:
+    - checkout
+    - when:
+        <<: *when-gke-auth-enabled
+        steps:
+          - run:
+              <<: *configure-gke-auth
+    - when:
+        <<: *when-whitelist
+        steps:
+          - custom/add_to_whitelist
+    - when:
+        <<: *when-helm-diff-true
+        steps:
+          - custom/helm_diff:
+              chart_release: datadog
+              chart_namespace: datadog
+              chart_name: datadog
+              chart_repo: "https://helm.datadoghq.com"
+          - custom/helm_diff:
+              chart_release: cert-manager
+              chart_namespace: cert-manager
+              chart_name: jetstack
+              chart_repo: "https://charts.jetstack.io"
+          - custom/notify:
+              datadog_step: <<parameters.datadog_step>>
+              cert_manager_step: <<parameters.cert_manager_step>>
+              event: always
+              template: notify_helm_diff
+    - <<: *restore-plan
+    - run:
+        name: Terraform Command
+        <<: *terraform-commands
+    - <<: *save-plan
+    - when:
+        <<: *when-whitelist
+        steps:
+          - custom/remove_from_whitelist
+    - custom/notify:
+        event: fail
+        status: "Failed :x: "
+        template: notify_status
+        step_number: <<parameters.step_number>>
+    - when:
+        <<: *when-plan
+        steps:
+          - custom/notify:
+              event: pass
+              status: "ON HOLD - Awaiting Approval :raised_hand:"
+              template: notify_status
+              step_number: <<parameters.step_number>>
+    - when:
+        <<: *when-apply
+        steps:
+          - custom/notify:
+              event: pass
+              status: "Finished Successful! :tada:"
+              template: notify_status
+              step_number: <<parameters.step_number>>
+
+version: 2.1
+orbs:
+  custom: dealroom/tf-deploy-orb@0.1.3
+  slack: circleci/slack@4.3.0
+workflows:
+  version: 2.1
+  start:
+    jobs:
+      - notify_start:
+          context:
+            - slack
+          <<: *filter-branches
+  gke-cluster:
+    jobs:
+      - check_change:
+          <<: *gke-cluster-context-develop
+      # - plan:
+      #     plan: true
+      #     step_number: "0-104"
+      #     <<: *k8s-parameters
+      #     <<: *gke-cluster-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          step_number: "0-105"
+          <<: *k8s-parameters
+          <<: *gke-cluster-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *gke-cluster-context-develop
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-104"
+          <<: *k8s-parameters
+          <<: *gke-cluster-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-105"
+          <<: *k8s-parameters
+          <<: *gke-cluster-context-main
+          <<: *apply-production-name-requires-filter
+
+  core-database:
+    jobs:
+      - check_change:
+          <<: *core-database-context-develop
+      # - plan:
+      #     plan: true
+      #     step_number: "0-104"
+      #     <<: *core-database-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          step_number: "0-105"
+          <<: *core-database-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *core-database-context-develop
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-104"
+          <<: *core-database-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-105"
+          <<: *core-database-context-main
+          <<: *apply-production-name-requires-filter
+
+  redis:
+    jobs:
+      - check_change:
+          <<: *redis-context-develop
+      # - plan:
+      #     plan: true
+      #     step_number: "0-104"
+      #     <<: *redis-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          step_number: "0-105"
+          <<: *redis-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *redis-context-develop
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-104"
+          <<: *redis-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-105"
+          <<: *redis-context-main
+          <<: *apply-production-name-requires-filter
+
+  secrets-management:
+    jobs:
+      - check_change:
+          <<: *secrets-management-context-develop
+      # - plan:
+      #     plan: true
+      #     step_number: "0-104"
+      #     <<: *k8s-parameters
+      #     <<: *secrets-management-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          step_number: "0-105"
+          <<: *k8s-parameters
+          <<: *secrets-management-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *secrets-management-context-main
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-104"
+          <<: *k8s-parameters
+          <<: *secrets-management-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-105"
+          <<: *k8s-parameters
+          <<: *secrets-management-context-main
+          <<: *apply-production-name-requires-filter
+
+  k8s-manifest:
+    jobs:
+      - check_change:
+          <<: *k8s-manifest-context-develop
+      # - plan:
+      #     plan: true
+      #     helm_diff: true
+      #     step_number: "0-108"
+      #     <<: *k8s-parameters
+      #     <<: *k8s-manifest-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          cert_manager_step: "0-105"
+          helm_diff: true
+          step_number: "0-109"
+          <<: *k8s-parameters
+          <<: *k8s-manifest-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *k8s-manifest-context-main
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-104"
+          <<: *k8s-parameters
+          <<: *k8s-manifest-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          step_number: "0-105"
+          <<: *k8s-parameters
+          <<: *k8s-manifest-context-main
+          <<: *apply-production-name-requires-filter
+
+  cloud-storage:
+    jobs:
+      - check_change:
+          <<: *cloud-storage-context-develop
+      # - plan:
+      #     plan: true
+      #     <<: *cloud-storage-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          <<: *cloud-storage-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *cloud-storage-context-main
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          <<: *cloud-storage-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          <<: *cloud-storage-context-main
+          <<: *apply-production-name-requires-filter
+
+  cloudamqp:
+    jobs:
+      - check_change:
+          <<: *cloudamqp-context-develop
+      # - plan:
+      #     plan: true
+      #     <<: *cloudamqp-context-develop
+      #     <<: *plan-development-name-filter
+      - plan:
+          plan: true
+          <<: *cloudamqp-context-main
+          <<: *plan-production-name-filter
+      - <<: *pause
+      - approved:
+          <<: *cloudamqp-context-main
+          <<: *approved-requires-filter
+      - apply:
+          apply: true
+          <<: *cloudamqp-context-develop
+          <<: *apply-develop-name-requires-filter
+      - apply:
+          apply: true
+          <<: *cloudamqp-context-main
+          <<: *apply-production-name-requires-filter
+
+jobs:
+  check_change:
+    <<: *check-change-container
+    steps:
+      - checkout
+      - when:
+          <<: *when-develop
+          steps:
+            - run:
+                command: |
+                  chmod +x ./git_diff.sh && ./git_diff.sh
+  plan:
+    environment:
+      <<: *config-default
+      COMMAND: plan
+      OPTION: "-out=../terraform-plan"
+    <<: *docker-cloudsdk-extras
+    <<: *defaults
+
+  apply:
+    environment:
+      <<: *config-default
+      COMMAND: apply
+      OPTION: "-auto-approve ../terraform-plan"
+    <<: *docker-cloudsdk-extras
+    <<: *defaults
+
+  approved:
+    <<: *slack-container
+    steps:
+      - slack/notify:
+          event: always
+          custom: |
+            {
+              "blocks": [
+            	  {
+            		  "type": "header",
+            		  "text": {
+            			  "type": "plain_text",
+            			  "text": "$PROJECT Approved :thumbsup:",
+            			  "emoji": true
+            		  }
+            	  }
+              ]
+            }
+
+  notify_start:
+    <<: *slack-container
+    steps:
+      - when:
+          <<: *when-develop
+          steps:
+            - run:
+                <<: *step-name
+                command: |
+                  echo "export WORKING_WORKSPACE=development" >> $BASH_ENV
+      - when:
+          <<: *when-main
+          steps:
+            - run:
+                <<: *step-name
+                command: |
+                  echo "export WORKING_WORKSPACE=production" >> $BASH_ENV
+      - slack/notify:
+          custom: |
+            {
+            	"blocks": [
+            		{
+            			"type": "header",
+            			"text": {
+            				"type": "plain_text",
+            				"text": "Terraform Pipeline Started :rocket:",
+            				"emoji": true
+            			}
+            		},
+            		{
+            			"type": "section",
+            			"fields": [
+            				{
+            					"type": "mrkdwn",
+            					"text": "*Project*\n$CIRCLE_PROJECT_REPONAME"
+            				},
+            				{
+            					"type": "mrkdwn",
+            					"text": "*Branch*\n$CIRCLE_BRANCH"
+            				},
+            				{
+            					"type": "mrkdwn",
+            					"text": "*Author*\n$CIRCLE_USERNAME"
+            				},
+                    {
+                        "type": "mrkdwn",
+                        "text": "*Terraform Workspace*\n${WORKING_WORKSPACE}"
+                    }
+            			],
+            			"accessory": {
+            				"type": "image",
+            				"image_url": "https://i.pinimg.com/originals/28/ec/74/28ec7440a57536eebad2931517aa1cce.png",
+            				"alt_text": "Terraform logo"
+            			}
+            		},
+            		{
+            			"type": "actions",
+            			"elements": [
+            				{
+            					"type": "button",
+            					"text": {
+            						"type": "plain_text",
+            						"text": "View Project"
+            					},
+            					"url": "https://app.circleci.com/pipelines/github/dealroom/core-infra"
+            				}
+            			]
+            		}
+            	]
+            }
+          event: always
+

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)https://s0.2mdn.net/sadbundle/14271717072777497350/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1"><meta name="ad.size" content="width=300,height=600"><title>Takeaway Display</title><link rel="stylesheet" href="./main(1).css"><script type="text/javascript">var clickTag = "http://www.google.com";</script><script type="text/javascript">
+    
+  (function() {
+    var MAX_URL_PARAM_LENGTH = 34;
+    var CLICK_X_URL_KEY = 'nx';
+    var CLICK_Y_URL_KEY = 'ny';
+    var CREATIVE_DIMENSIONS_KEY = 'dim';
+    var AD_URL_PARAM = '&adurl=';
+
+    var relegateNavigation = '';
+    var urlParamMap = {};
+
+    urlParamMap[CLICK_X_URL_KEY] = null;
+    urlParamMap[CLICK_Y_URL_KEY] = null;
+    urlParamMap[CREATIVE_DIMENSIONS_KEY] = null;
+
+    var handleClickTagMessage = function(e) {
+      try {
+        var eventData = JSON.parse(e.data);
+      } catch (err) {
+        return;
+      }
+      if (eventData.isInitClickTag) {
+        if (eventData.clickTags) {
+          for (var i = 0; i < eventData.clickTags.length; i++) {
+            var clkTag = eventData.clickTags[i];
+            window[clkTag.name] = clkTag.url;
+          }
+        } else if (eventData.clickTag) {
+          window.clickTag = eventData.clickTag;
+        }
+        relegateNavigation = eventData.relegateNavigation;
+      }
+    };
+
+    var storeClickCoordinates = function(e) {
+      urlParamMap[CLICK_X_URL_KEY] = Math.round(e.clientX);
+      urlParamMap[CLICK_Y_URL_KEY] = Math.round(e.clientY);
+    };
+
+    var getCreativeDimensions = function() {
+      return window.innerWidth + 'x' + window.innerHeight;
+    }
+
+    var getExitClickParams = function(e) {
+      urlParamMap[CREATIVE_DIMENSIONS_KEY] = getCreativeDimensions();
+
+      var exitParams = '';
+      for (var key in urlParamMap) {
+        exitParams += '&' + key + '=';
+        if (urlParamMap[key] !== null) {
+          exitParams += urlParamMap[key];
+        }
+      }
+      return exitParams;
+    }
+
+    var appendExitClickParams = function(url) {
+      var adUrlIndex = url.toLowerCase().indexOf(AD_URL_PARAM);
+      var paramsToBeAdded = getExitClickParams();
+      if (adUrlIndex > -1 && paramsToBeAdded.length <= MAX_URL_PARAM_LENGTH) {
+        url = url.substr(0, adUrlIndex) + paramsToBeAdded +
+          url.substr(adUrlIndex);
+      };
+      return url;
+    };
+
+    if (open.call) {
+      window.open = function(open) {
+        return function(url, name, features) {
+          url = appendExitClickParams(url);
+          if (relegateNavigation === 'parent') {
+            var message = {'clickTag': url, 'isPostClickTag': true};
+            parent.postMessage(JSON.stringify(message), '*');
+          } else {
+            var args = [url, name];
+            if (features) {
+              args.push(features);
+            }
+            open.apply(window, args);
+          }
+        };
+      }(window.open);
+    }
+
+    if (window.addEventListener) {
+      window.addEventListener(
+          'message', handleClickTagMessage, false);
+      window.addEventListener('mousedown', storeClickCoordinates, true);
+    } else {
+      window.attachEvent('onmessage', handleClickTagMessage);
+    }
+  })();
+    
+  </script></head><body><!-- Replaced data --><script>var injectedCampaignData = {"showRazor":true,"backgroundOrange":false,"frames":{"frame1":{"frameDuration":"2500","sponsorLogo":true,"type":"main","transitionType":"fadeIn","style":"original","showIconLogo":false,"animateElements":"true","backgroundType":"image","backgroundZoom":140,"moveBackground":"true","highResolution":"no","backgroundVideo":{"url":""},"backgroundOrange":false,"headline":{"multilanguage":true,"NL":{"value":"De nieuwe\nMagnum Starchaser","requiresTranslation":false,"updated":true},"transforms":{"scale":null,"left":32,"top":22,"width":236}},"headlineFontSize":100,"headlineLineHeight":109,"headlineAlign":"default","buttonStyle":"original","backgroundImage":{"url":"jpg_63d12eaa383670.91395980.jpg"},"logo":{"transforms":{"scale":null,"bottom":-99.7989,"height":90}},"useFloatingImages":true,"visual1":{"url":"png_63d12eaa5270e0.59554076.png","transforms":{"scale":null,"left":14.6617,"top":414.364,"width":268,"height":180}},"backgroundImageBanner":{"transforms":{"scale":null,"left":-176.1,"top":-100.81,"width":525,"height":525}}},"frame2":{"frameDuration":"2500","sponsorLogo":true,"type":"main","transitionType":"fadeIn","style":"original","showIconLogo":false,"animateElements":"true","backgroundType":"image","backgroundZoom":140,"moveBackground":"true","highResolution":"no","backgroundVideo":{"url":""},"backgroundOrange":false,"headline":{"multilanguage":true,"NL":{"value":"Alleen op\nThuisbezorgd.nl","requiresTranslation":false,"updated":true},"transforms":{"left":32,"top":25,"width":236}},"headlineFontSize":100,"headlineLineHeight":109,"headlineAlign":"default","buttonStyle":"new","legalText":{"multilanguage":true,"NL":{"value":"","requiresTranslation":false,"updated":true}},"legalTextFontSize":100,"legalTextLineHeight":100,"legalTextColor":"#ffffff","legalTextAlign":"default","cta":{"multilanguage":true,"NL":{"value":"Ontdek meer","requiresTranslation":false,"updated":true},"transforms":{"scale":"0.75","left":42.2701,"top":80.9156,"right":38.4565,"bottom":71.0854}},"ctaAlignment":"default","backgroundImage":{"url":"jpg_63d12eaa6db798.59048696.jpg"},"logo":{"transforms":{"scale":null,"bottom":-99.7989,"height":90}},"useFloatingImages":true,"visual1":{"url":"png_63d12eaa870ca0.49969868.png","transforms":{"scale":null,"left":14.6617,"top":414.364,"width":268,"height":180}},"backgroundImageBanner":{"transforms":{"scale":null,"left":-176.1,"top":-100.81,"width":525,"height":525}}}},"general":{"logoHorizontal":{"url":"svg_63d12eaa9d4cd2.26005123.svg"},"logoVertical":{"url":"svg_63d12eaab654e9.40254624.svg"}},"loops":"2","language":"NL","market":"NL","brand":"","format":"halfpage","frameNr":0,"editmode":0};;</script><div id="clickTagLayer" style="cursor: pointer;"></div><div template-banner="" class="banner halfpage vertical animation animation-in frame2" style="cursor: pointer"><div class="bannerBackgroundColor" template="bannerBackgroundColor" path="{&quot;backgroundColor&quot;:&quot;model.bannerBackgroundColor&quot;}"></div><div class="frames"><div class="frame main frame1 fadeIn" frame-type="main" frame-index="1" frame-key="frame1" frame-duration="2500" frame-animation-duration="300" frame-loop="1" frame-overlap="900" style="z-index: 15;"><div class="backgroundImageBanner__position animate-element backgroundFronttruefalse original" original-classes="[&quot;backgroundImageBanner__position&quot;]" scale="null" style="left: -176.1px; top: -100.81px; height: 525px; width: 525px; transform: scale(1.4);"><div class="backgroundImageBanner__holder"><div class="backgroundImageBanner__animation"><div class="backgroundImageBanner" template="backgroundImageBanner" path="{&quot;canMove&quot;:&quot;model.frames.frame1.moveBackground&quot;,&quot;backgroundImage&quot;:&quot;model.frames.frame1.backgroundImage.url&quot;}" style="background-image: url(&quot;jpg_63d12eaa383670.91395980.jpg&quot;);"></div></div></div></div><div class="backgroundVideo__position animate-element backgroundFronttruefalse original" original-display="block" original-classes="[&quot;backgroundVideo__position&quot;]" style="display: none; left: 0px; top: 0px; height: 280px; width: 300px; transform: scale(1.4);"><div class="backgroundVideo__holder"><div class="backgroundVideo__animation"><video playsinline="" autoplay="" preload="auto" loop="" muted="" class="backgroundVideo" template="backgroundVideo" path="{&quot;canMove&quot;:&quot;model.frames.frame1.moveBackground&quot;}" src=""></video></div></div></div><div class="gradient__position" original-display="block" original-classes="[&quot;gradient__position&quot;]" style="display: none;"><div class="gradient__holder"><div class="gradient__animation"><div class="gradient" template="gradient"></div></div></div></div><div class="visual1__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual1__position&quot;]" scale="null" style="display: block; top: 414.364px; left: 14.6617px; width: 268px; height: 180px;"><div class="visual1__holder"><div class="visual1__animation"><div template="visual1" class="visual1" path="{&quot;backgroundImage&quot;:&quot;model.frames.frame1.visual1.url&quot;}" style="background-image: url(&quot;png_63d12eaa5270e0.59554076.png&quot;);"></div></div></div></div><div class="visual2__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual2__position&quot;]" style="display: none; top: 50px; left: 16px; width: 268px; height: 180px;"><div class="visual2__holder"><div class="visual2__animation"><div template="visual2" class="visual2" path="{&quot;backgroundImage&quot;:&quot;model.visual2&quot;}" style="background-image: none;"></div></div></div></div><div class="visual3__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual3__position&quot;]" style="display: none; top: 50px; left: 16px; width: 268px; height: 180px;"><div class="visual3__holder"><div class="visual3__animation"><div template="visual3" class="visual3" path="{&quot;backgroundImage&quot;:&quot;model.visual3&quot;}" style="background-image: none;"></div></div></div></div><div class="razor__position backgroundOrangefalse resizeRazorundefined original animate-element horizontal" original-display="block" original-classes="[&quot;razor__position&quot;]" style="display: block; bottom: 0px; width: 300px; height: 330px;"><div class="razor__holder"><div class="razor__animation"><div class="razor" template="razor" path="{&quot;canResize&quot;:&quot;model.resizeRazor&quot;}"><div class="storeContainer__position" original-classes="[&quot;storeContainer__position&quot;]" original-display="block" style="display: none; width: 80px; right: 32px; top: -75px;"><div class="storeContainer__holder"><div class="storeContainer__animation"><div class="storeContainer" template="storeLogos"><div class="logoAppStore__position" original-display="block" style="display: none; margin-bottom: 5px;"><div class="logoAppStore__holder"><div class="logoAppStore__animation"><img class="logoAppStore" template="logoAppStore" insert-src="logoAppStore" src="./app-store(1).png" style="opacity: 1; z-index: 10; display: block;"></div></div></div><div class="logoGooglePlay__position" original-display="block" style="display: none;"><div class="logoGooglePlay__holder"><div class="logoGooglePlay__animation"><img class="logoGooglePlay" template="logoGooglePlay" insert-src="logoGooglePlay" src="./google-play(1).png" style="opacity: 1; z-index: 10; display: block;"></div></div></div></div></div></div></div><img class="chainLogo" template="chainLogo" insert-src="chainLogo"><div class="headline__position" original-display="block" original-classes="[&quot;headline__position&quot;]" scale="null" style="display: block; top: 22px; left: 32px; width: 236px;"><div class="headline__holder"><div class="headline__animation"><div class="headline" template="headline" path="{&quot;color&quot;:&quot;model.headlineColor&quot;,&quot;textAlign&quot;:&quot;model.frames.frame1.headlineAlign&quot;,&quot;fontScale&quot;:&quot;model.frames.frame1.headlineFontSize&quot;,&quot;lineHeight&quot;:&quot;model.frames.frame1.headlineLineHeight&quot;}" style="display: block; text-align: center; font-size: 30px; line-height: 1.09;"><span class="text-container" style="display: inline-block; font-size: 1em;">De nieuwe<br>Magnum Starchaser</span></div></div></div></div><div class="cta__position animate-element original scaleCenter" original-display="block" original-classes="[&quot;cta__position&quot;]" scale="0.75" style="display: none; bottom: 155px; transform: scale(0.75); right: 150px;"><div class="cta__holder"><div class="cta__animation"><div class="cta" template="cta" style="display: none;"></div></div></div></div><div class="logoContainer"><div class="logo__position" scale="null" style="height: 90px; bottom: -99.7989px;"><div class="logo__holder"><div class="logo__animation"><div class="logo" template="logo" path="{&quot;backgroundImage&quot;:&quot;model.market&quot;}" style="background-image: url(&quot;logo_NL_v.svg&quot;); background-position: 50% center; background-color: rgba(0, 0, 0, 0); -webkit-mask: none;"></div></div></div></div><div class="logoHorizontal__position" original-classes="[&quot;logoHorizontal__position&quot;]" original-display="block" style="left: 0px; display: none; height: 42px; bottom: 50px;"><div class="logoHorizontal__holder"><div class="logoHorizontal__animation"><div class="logoHorizontal" template="logoHorizontal" path="{&quot;backgroundImage&quot;:&quot;model.market&quot;}" style="background-image: url(&quot;logo_NL_h.svg&quot;); background-position: 50% center; background-color: rgba(0, 0, 0, 0); -webkit-mask: none;"></div></div></div></div></div></div></div></div></div><div class="legalText__position left" original-display="block" style="display: none; top: 15px; left: 4px; height: 220px;"><div class="legalText__holder"><div class="legalText__animation"><div class="legalText" template="legalText" path="{&quot;color&quot;:&quot;model.legalTextColor&quot;,&quot;lineHeight&quot;:&quot;model.legalTextLineHeight&quot;,&quot;fontScale&quot;:&quot;model.legalTextFontSize&quot;,&quot;textAlign&quot;:&quot;model.legalTextAlign&quot;}" style="display: none; font-size: 12px;"><span class="text-container"></span></div></div></div></div></div><div class="frame main frame2 fadeIn active animation-in" frame-type="main" frame-index="2" frame-key="frame2" frame-duration="2500" frame-animation-duration="300" frame-loop="1" frame-overlap="900" style="z-index: 16;"><div class="backgroundImageBanner__position animate-element backgroundFronttruefalse original" original-classes="[&quot;backgroundImageBanner__position&quot;]" scale="null" style="left: -176.1px; top: -100.81px; height: 525px; width: 525px; transform: scale(1.4);"><div class="backgroundImageBanner__holder"><div class="backgroundImageBanner__animation"><div class="backgroundImageBanner" template="backgroundImageBanner" path="{&quot;canMove&quot;:&quot;model.frames.frame2.moveBackground&quot;,&quot;backgroundImage&quot;:&quot;model.frames.frame2.backgroundImage.url&quot;}" style="background-image: url(&quot;jpg_63d12eaa6db798.59048696.jpg&quot;);"></div></div></div></div><div class="backgroundVideo__position animate-element backgroundFronttruefalse original" original-display="block" original-classes="[&quot;backgroundVideo__position&quot;]" style="display: none; left: 0px; top: 0px; height: 280px; width: 300px; transform: scale(1.4);"><div class="backgroundVideo__holder"><div class="backgroundVideo__animation"><video playsinline="" autoplay="" preload="auto" loop="" muted="" class="backgroundVideo" template="backgroundVideo" path="{&quot;canMove&quot;:&quot;model.frames.frame2.moveBackground&quot;}" src=""></video></div></div></div><div class="gradient__position" original-display="block" original-classes="[&quot;gradient__position&quot;]" style="display: none;"><div class="gradient__holder"><div class="gradient__animation"><div class="gradient" template="gradient"></div></div></div></div><div class="visual1__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual1__position&quot;]" scale="null" style="display: block; top: 414.364px; left: 14.6617px; width: 268px; height: 180px;"><div class="visual1__holder"><div class="visual1__animation"><div template="visual1" class="visual1" path="{&quot;backgroundImage&quot;:&quot;model.frames.frame2.visual1.url&quot;}" style="background-image: url(&quot;png_63d12eaa870ca0.49969868.png&quot;);"></div></div></div></div><div class="visual2__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual2__position&quot;]" style="display: none; top: 50px; left: 16px; width: 268px; height: 180px;"><div class="visual2__holder"><div class="visual2__animation"><div template="visual2" class="visual2" path="{&quot;backgroundImage&quot;:&quot;model.visual2&quot;}" style="background-image: none;"></div></div></div></div><div class="visual3__position animate-element backgroundOrangefalse original" original-display="block" original-classes="[&quot;visual3__position&quot;]" style="display: none; top: 50px; left: 16px; width: 268px; height: 180px;"><div class="visual3__holder"><div class="visual3__animation"><div template="visual3" class="visual3" path="{&quot;backgroundImage&quot;:&quot;model.visual3&quot;}" style="background-image: none;"></div></div></div></div><div class="razor__position backgroundOrangefalse resizeRazorundefined original animate-element horizontal" original-display="block" original-classes="[&quot;razor__position&quot;]" style="display: block; bottom: 0px; width: 300px; height: 330px;"><div class="razor__holder"><div class="razor__animation"><div class="razor" template="razor" path="{&quot;canResize&quot;:&quot;model.resizeRazor&quot;}"><div class="storeContainer__position" original-classes="[&quot;storeContainer__position&quot;]" original-display="block" style="display: none; width: 80px; right: 32px; top: -75px;"><div class="storeContainer__holder"><div class="storeContainer__animation"><div class="storeContainer" template="storeLogos"><div class="logoAppStore__position" original-display="block" style="display: none; margin-bottom: 5px;"><div class="logoAppStore__holder"><div class="logoAppStore__animation"><img class="logoAppStore" template="logoAppStore" insert-src="logoAppStore" src="./app-store(1).png" style="opacity: 1; z-index: 10; display: block;"></div></div></div><div class="logoGooglePlay__position" original-display="block" style="display: none;"><div class="logoGooglePlay__holder"><div class="logoGooglePlay__animation"><img class="logoGooglePlay" template="logoGooglePlay" insert-src="logoGooglePlay" src="./google-play(1).png" style="opacity: 1; z-index: 10; display: block;"></div></div></div></div></div></div></div><img class="chainLogo" template="chainLogo" insert-src="chainLogo"><div class="headline__position" original-display="block" original-classes="[&quot;headline__position&quot;]" style="display: block; top: 25px; left: 32px; width: 236px;"><div class="headline__holder"><div class="headline__animation"><div class="headline" template="headline" path="{&quot;color&quot;:&quot;model.headlineColor&quot;,&quot;textAlign&quot;:&quot;model.frames.frame2.headlineAlign&quot;,&quot;fontScale&quot;:&quot;model.frames.frame2.headlineFontSize&quot;,&quot;lineHeight&quot;:&quot;model.frames.frame2.headlineLineHeight&quot;}" style="display: block; text-align: center; font-size: 30px; line-height: 1.09;"><span class="text-container" style="display: inline-block; font-size: 1em;">Alleen op<br>Thuisbezorgd.nl</span></div></div></div></div><div class="cta__position animate-element original new scaleCenter" original-display="block" original-classes="[&quot;cta__position&quot;]" scale="0.75" style="display: block; bottom: 71.0854px; transform: scale(0.75); top: 80.9156px; right: 80px;"><div class="cta__holder"><div class="cta__animation"><div class="cta" template="cta" style="display: block;"><span class="text-container" style="display: inline-block;">Ontdek meer</span></div></div></div></div><div class="logoContainer"><div class="logo__position" scale="null" style="height: 90px; bottom: -99.7989px;"><div class="logo__holder"><div class="logo__animation"><div class="logo" template="logo" path="{&quot;backgroundImage&quot;:&quot;model.market&quot;}" style="background-image: url(&quot;logo_NL_v.svg&quot;); background-position: 50% center; background-color: rgba(0, 0, 0, 0); -webkit-mask: none;"></div></div></div></div><div class="logoHorizontal__position" original-classes="[&quot;logoHorizontal__position&quot;]" original-display="block" style="left: 0px; display: none; height: 42px; bottom: 50px;"><div class="logoHorizontal__holder"><div class="logoHorizontal__animation"><div class="logoHorizontal" template="logoHorizontal" path="{&quot;backgroundImage&quot;:&quot;model.market&quot;}" style="background-image: url(&quot;logo_NL_h.svg&quot;); background-position: 50% center; background-color: rgba(0, 0, 0, 0); -webkit-mask: none;"></div></div></div></div></div></div></div></div></div><div class="legalText__position left" original-display="block" style="display: none; top: 15px; left: 4px; height: 220px;"><div class="legalText__holder"><div class="legalText__animation"><div class="legalText" template="legalText" path="{&quot;color&quot;:&quot;model.frames.frame2.legalTextColor&quot;,&quot;lineHeight&quot;:&quot;model.frames.frame2.legalTextLineHeight&quot;,&quot;fontScale&quot;:&quot;model.frames.frame2.legalTextFontSize&quot;,&quot;textAlign&quot;:&quot;model.frames.frame2.legalTextAlign&quot;}" style="display: none; color: rgb(255, 255, 255); line-height: calc(1); font-size: 12px; text-align: right;"><span class="text-container" style="font-size: 1em;"></span></div></div></div></div></div></div><div class="mask"></div></div><script type="text/javascript">(function () {
+            var layer = document.getElementById("clickTagLayer");
+            if (layer) {
+                var listen = function (obj, e, fn) {
+                    if (obj.addEventListener) {
+                        obj.addEventListener(e, fn, false);
+                    } else {
+                        obj.attachEvent("on" + e, fn);
+                    }
+                };
+                listen(layer, 'click', function (evt) {
+                    evt.stopPropagation();
+                    try {
+                        evt.cancelBubble();
+                    } catch (e) { /* ignore */
+                    }
+                    window.open(window.clickTag, '_blank');
+                });
+            }
+        })();</script><script src="./main(2).js"></script></body></html>
