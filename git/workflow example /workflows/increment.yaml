@@ -1,0 +1,241 @@
+name: Creation of Release Version
+on: # on merge to master
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_matrix: ${{ steps.set-matrix.outputs.repo_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # Checkout as many commits as needed for the diff
+          fetch-depth: 0
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+      - name: List all changed files
+        run: |
+          # https://github.com/github/super-linter/issues/2577
+          # shellcheck disable=2043
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+      - name: "Get Previous tag"
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - shell: pwsh
+        name: Check if files changed
+        id: set-matrix
+        run: |
+          $repo = @('cloud-sdk','elasticsearch','module-pipeline','mysql','php-base','protoc','rabbitmq','terraform','xhgui')
+          $changed = @()
+
+          # Diff HEAD with the previous commit
+          $diff = git diff --name-only HEAD^ HEAD
+
+          echo "$diff"
+
+          foreach ($r in $repo) {
+            $count = 0
+            foreach ($file in $diff) {
+
+             if ( $file.Contains($r) ){
+               $count++
+             }
+
+            }
+
+            if($count -gt 0){
+             $changed = $changed +  $r
+            }
+
+          }
+
+
+          $JoinedString = '["' + ($changed -join '","' ) + '"]'
+
+          $l = $changed.Length
+          echo "changed repo count is $l"
+
+          if ($changed.Length -eq 0 )
+          {
+            $JoinedString ='[]'
+          }
+
+          echo "repo_matrix=$JoinedString" >> $env:GITHUB_OUTPUT
+      - name: Value of repo_matrix
+        run: |
+          echo "Matrix Value is ${{ steps.set-matrix.outputs.repo_matrix }}"
+  increment:
+    needs: build-matrix
+    if: ${{ needs.build-matrix.outputs.repo_matrix != '[]' && needs.build-matrix.outputs.repo_matrix != '' }}
+    name: Create Release
+    permissions:
+      contents: "read"
+      id-token: "write"
+    strategy:
+      matrix:
+        modules: ${{ fromJson(needs.build-matrix.outputs.repo_matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # Checkout as many commits as needed for the diff
+          fetch-depth: 0
+      - name: "Get Previous tag"
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
+      - name: Generate versions
+        uses: HardNorth/github-version-generate@v1.3.0
+        with:
+          version-source: file
+          version-file: version.properties
+          version-file-extraction-pattern: "(?<=${{ matrix.modules }}=).+"
+
+      - name: image version
+        run: |
+          echo Release version
+          echo ${{ env.RELEASE_VERSION }}
+
+      - name: Echo pull_request labes
+        run: |
+          x=${{ toJson(github.event.pull_request.labels.*.name) }}
+          echo $x
+
+      - name: Bumping Major Index
+        id: bump_version_major
+        if: contains(github.event.pull_request.labels.*.name, 'update-major')
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ env.RELEASE_VERSION }}
+          version-fragment: "major"
+
+      - name: Bumping Minor Index
+        id: bump_version_minor
+        if: contains(github.event.pull_request.labels.*.name, 'update-minor')
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ env.RELEASE_VERSION }}
+          version-fragment: "feature"
+
+      - name: Bumping Patch Index
+        id: bump_version_patch
+        if: contains(github.event.pull_request.labels.*.name, 'update-patch')
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ env.RELEASE_VERSION }}
+          version-fragment: "bug"
+
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: "projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-dealroom-contrainer-pool/providers/github-provider"
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          access_token_lifetime: "3600s"
+
+      - name: set credential_file
+        run: gcloud auth login --cred-file=${{steps.auth.outputs.credentials_file_path}} --activate --quiet
+
+      - name: Run gcloud config list
+        run: gcloud config list
+
+      - name: image version
+        run: |
+          echo Release version
+          echo "RELEASE_VERSION:    ${{ env.RELEASE_VERSION }}"
+          echo "bump_version_major: ${{ steps.bump_version_major.outputs.next-version }}"
+          echo "bump_version_minor: ${{ steps.bump_version_minor.outputs.next-version }}"
+          echo "bump_version_patch: ${{ steps.bump_version_patch.outputs.next-version }}"
+
+      - name: Build and push Major Index
+        if: contains(github.event.pull_request.labels.*.name, 'update-major')
+        uses: RafikFarhad/push-to-gcr-github-action@v5-beta
+        with:
+          registry: europe-docker.pkg.dev
+          project_id: dealroom-artifacts
+          image_name: containers/${{ matrix.modules }}
+          image_tag: v${{ steps.bump_version_major.outputs.next-version }}
+          dockerfile: ./${{ matrix.modules }}/Dockerfile
+          context: ./${{ matrix.modules }}
+
+      - name: Build and push Minor Index
+        if: contains(github.event.pull_request.labels.*.name, 'update-minor')
+        uses: RafikFarhad/push-to-gcr-github-action@v5-beta
+        with:
+          registry: europe-docker.pkg.dev
+          project_id: dealroom-artifacts
+          image_name: containers/${{ matrix.modules }}
+          image_tag: v${{ steps.bump_version_minor.outputs.next-version }}
+          dockerfile: ./${{ matrix.modules }}/Dockerfile
+          context: ./${{ matrix.modules }}
+
+      - name: Build and push Patch Index
+        if: contains(github.event.pull_request.labels.*.name, 'update-patch')
+        uses: RafikFarhad/push-to-gcr-github-action@v5-beta
+        with:
+          registry: europe-docker.pkg.dev
+          project_id: dealroom-artifacts
+          image_name: containers/${{ matrix.modules }}
+          image_tag: v${{ steps.bump_version_patch.outputs.next-version }}
+          dockerfile: ./${{ matrix.modules }}/Dockerfile
+          context: ./${{ matrix.modules }}
+
+      - name: Write major index value to version Properties-file
+        if: contains(github.event.pull_request.labels.*.name, 'update-major')
+        uses: christian-draeger/write-properties@1.1.0
+        with:
+          path: "./version.properties"
+          property: |
+            '${{ matrix.modules }}'
+          value: |
+            '${{ steps.bump_version_major.outputs.next-version}}'
+
+      - name: Write minor index value to version Properties-file
+        if: contains(github.event.pull_request.labels.*.name, 'update-minor')
+        uses: christian-draeger/write-properties@1.1.0
+        with:
+          path: "./version.properties"
+          property: |
+            '${{ matrix.modules }}'
+          value: |
+            '${{ steps.bump_version_minor.outputs.next-version }}'
+
+      - name: Write patch index value to version Properties-file
+        if: contains(github.event.pull_request.labels.*.name, 'patch')
+        uses: christian-draeger/write-properties@1.1.0
+        with:
+          path: "./version.properties"
+          property: |
+            '${{ matrix.modules }}'
+          value: |
+            '${{ steps.bump_version_patch.outputs.next-version }}'
+
+      - name: Create Pull Request
+        if: |
+          contains(github.event.pull_request.labels.*.name, 'update-major') ||
+          contains(github.event.pull_request.labels.*.name, 'update-minor') ||
+          contains(github.event.pull_request.labels.*.name, 'update-patch')
+
+        id: cpr
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GH_TOKEN_DEALROOMBA }}
+          commit-message: Update ${{ matrix.modules }} version
+          delete-branch: true
+          labels: sync
+
+      - name: Check outputs
+        if: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"

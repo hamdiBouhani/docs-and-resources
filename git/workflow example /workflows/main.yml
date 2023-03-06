@@ -1,0 +1,141 @@
+name: Release Image
+# on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_matrix: ${{ steps.set-matrix.outputs.repo_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # OR "2" -> To retrieve the preceding commit.
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+      - name: List all changed files
+        run: |
+          # https://github.com/github/super-linter/issues/2577
+          # shellcheck disable=2043
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+      - shell: pwsh
+        name: Check if files changed
+        id: set-matrix
+        run: |
+          $repo = @('cloud-sdk','elasticsearch','module-pipeline','mysql','php-base','protoc','rabbitmq','terraform','xhgui')
+          $changed = @()
+
+          # Diff HEAD with the previous commit
+          $diff = git diff --name-only HEAD^ HEAD
+
+          echo "$diff"
+
+          foreach ($r in $repo) {
+            $count = 0
+            foreach ($file in $diff) {
+
+             if ( $file.Contains($r) ){
+               $count++
+             }
+
+            }
+
+            if($count -gt 0){
+             $changed = $changed +  $r
+            }
+
+          }
+
+
+          $JoinedString = '["' + ($changed -join '","' ) + '"]'
+
+          $l = $changed.Length
+          echo "changed repo count is $l"
+
+          if ($changed.Length -eq 0 )
+          {
+            $JoinedString ='[]'
+          }
+
+          echo "repo_matrix=$JoinedString" >> $env:GITHUB_OUTPUT
+      - name: Value of repo_matrix
+        run: |
+          echo '${{ toJSON(steps.set-matrix.outputs.repo_matrix ) }}'
+  build-and-push-to-gcr-workload-identity:
+    needs: build-matrix
+    if: ${{ needs.build-matrix.outputs.repo_matrix != '[]' && needs.build-matrix.outputs.repo_matrix != '' }}
+    name: Build & push
+    permissions:
+      contents: "read"
+      id-token: "write"
+    strategy:
+      matrix:
+        modules: ${{ fromJson(needs.build-matrix.outputs.repo_matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # OR "2" -> To retrieve the preceding commit.
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+
+      - id: "auth"
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: "projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-dealroom-contrainer-pool/providers/github-provider"
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          access_token_lifetime: "3600s"
+
+      - name: Log credentials file
+        run: cat ${{steps.auth.outputs.credentials_file_path}}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: set credential_file
+        run: gcloud auth login --cred-file=${{steps.auth.outputs.credentials_file_path}} --activate --quiet
+
+      - name: Run gcloud config list
+        run: gcloud config list
+
+      - name: Generate versions
+        uses: HardNorth/github-version-generate@v1.3.0
+        with:
+          version-source: file
+          version-file: version.properties
+          version-file-extraction-pattern: "(?<=${{ matrix.modules }}=).+"
+
+      - name: image version
+        run: |
+          echo Release version
+          echo ${{ env.RELEASE_VERSION }}
+
+      - name: Build and push
+        uses: RafikFarhad/push-to-gcr-github-action@v5-beta #https://github.com/RafikFarhad/push-to-gcr-github-action/blob/master/.github/workflows/build_and_push.yaml
+        with:
+          registry: europe-docker.pkg.dev
+          project_id: dealroom-artifacts
+          image_name: containers/${{ matrix.modules }}
+          image_tag: latest,v${{ env.RELEASE_VERSION }}
+          dockerfile: ./${{ matrix.modules }}/Dockerfile
+          context: ./${{ matrix.modules }}
+# - name: Build and push ARM image
+#   uses: RafikFarhad/push-to-gcr-github-action@v5-beta
+#   with:
+#     registry: europe-docker.pkg.dev
+#     project_id: dealroom-artifacts
+#     image_name: containers/${{ matrix.modules }}-arm64
+#     image_tag: latest,v${{ env.RELEASE_VERSION }}
+#     dockerfile: ./${{ matrix.modules }}/Dockerfile
+#     context: ./${{ matrix.modules }}
+#     build_args: arch=arm64/v8
